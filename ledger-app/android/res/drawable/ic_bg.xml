@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 图标底色：斜向蓝色渐变，和 App 里「海洋」主题一个色系 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:type="linear"
+        android:angle="315"
+        android:startColor="#63ADF5"
+        android:centerColor="#3F8BDF"
+        android:endColor="#2A67BE" />
+</shape>

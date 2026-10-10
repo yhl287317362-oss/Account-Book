@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="ocean">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5aa9e6">
+<title>记一笔</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ══════════════════ 首页 ══════════════════ -->
+  <section class="page is-on" id="pageHome">
+
+    <!-- 顶部主题区（冻结不滚）：头像 + 问候语 + 激励语 + 主题切换 -->
+    <div class="hero">
+      <div class="hero-top">
+        <button class="avatar-btn" id="btnAvatar" aria-label="更换头像">
+          <img class="avatar" id="avatarImg" alt="" hidden>
+          <span class="avatar-ph" id="avatarPh">🙂</span>
+        </button>
+
+        <div class="greet">
+          <div class="greet-hi" id="greetHi">早上好！</div>
+          <div class="greet-quote" id="greetQuote">今天也要好好生活呀</div>
+        </div>
+
+        <button class="theme-btn" id="btnBook" aria-label="切换账本">
+          <span id="bookName">日常账本</span>
+          <span class="tb-arrow">▾</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 可滚动主体：今日/本月收支、最近常用、流水都在里面，一起滚 -->
+    <div class="body-scroll" id="bodyHome">
+
+      <!-- ④ 首页装饰层：整层浮在内容上方，点不挡；上传自制主题图后才会出现 -->
+      <div class="deco-layer" id="decoHome"></div>
+
+      <!-- 日常账本：支出预算卡（仿支付宝「支出预算」样式） -->
+      <div class="budget-card" id="budgetCard" hidden>
+        <button class="budget-month" id="budMonthBtn">
+          <span id="budMonthText">2026年9月</span>
+        </button>
+        <div class="budget-cols">
+          <div class="budget-col">
+            <div class="budget-label">支出(元)</div>
+            <div class="budget-num" id="budExp">0.00</div>
+          </div>
+          <div class="budget-col">
+            <div class="budget-label">收入(元)</div>
+            <div class="budget-num" id="budInc">0.00</div>
+          </div>
+        </div>
+        <button class="budget-set" id="btnSetBudget">设置支出预算 ›</button>
+        <div class="budget-bar-wrap" id="budBarWrap" hidden>
+          <div class="budget-bar" id="budBar"></div>
+          <div class="budget-bar-txt" id="budBarTxt"></div>
+        </div>
+      </div>
+
+      <!-- 统筹账本：资产总览（不按日期）：结余大字 + 支出/收入两列 -->
+      <div class="pool-card" id="poolCard" hidden>
+        <div class="pool-net-label">结余</div>
+        <div class="pool-net num-fit" id="poolNet">0.00</div>
+        <div class="pool-net-sub">收入 − 支出</div>
+        <div class="pool-cols">
+          <div class="pool-col">
+            <div class="pool-col-label">支出</div>
+            <div class="pool-col-num num-fit" id="poolOut">0.00</div>
+          </div>
+          <div class="pool-sep"></div>
+          <div class="pool-col">
+            <div class="pool-col-label">收入</div>
+            <div class="pool-col-num num-fit is-in" id="poolIn">0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ★ 流水：整页一起滚，首页只展示最新 8 条，全量去「更多」 -->
+      <div class="card card-flow">
+        <div class="card-head">
+          <span class="card-title">流水</span>
+          <span class="card-count" id="recCount"></span>
+          <button class="card-more" id="btnMoreRec">更多 ›</button>
+        </div>
+        <div id="recList"></div>
+        <div class="flow-hint" id="flowHint" hidden></div>
+      </div>
+
+    </div>
+
+    <button class="fab" id="btnAdd" aria-label="记一笔"><span class="fab-plus">+</span></button>
+
+  </section>
+
+  <!-- ══════════════════ 统计 ══════════════════ -->
+  <section class="page" id="pageStats">
+
+    <div class="stats-top">
+      <div class="month-nav-bar">
+        <button class="mn-btn" id="stPrev" aria-label="上个月">‹</button>
+        <span class="mn-title" id="stTitle">—</span>
+        <button class="mn-btn" id="stNext" aria-label="下个月">›</button>
+      </div>
+      <div class="seg seg-sm" id="stTypeSeg">
+        <button data-t="expense" class="is-on">支出</button>
+        <button data-t="income">收入</button>
+      </div>
+      <div class="stats-total">
+        <div class="st-label" id="stLabel">共支出</div>
+        <div class="st-num" id="stTotal">¥ 0.00</div>
+      </div>
+    </div>
+
+    <div class="body-scroll" id="bodyStats">
+
+      <!-- ⑤ 统计装饰层：整层浮在内容上方 -->
+      <div class="deco-layer" id="decoStatsLayer"></div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">支出构成</span>
+          <span class="card-count" id="catTipText">点类目看明细</span>
+        </div>
+        <div class="donut-wrap">
+          <svg class="donut" id="donut" viewBox="0 0 120 120"></svg>
+          <div class="donut-center">
+            <div class="dc-label" id="dcLabel">总支出</div>
+            <div class="dc-num" id="dcNum">¥0</div>
+          </div>
+        </div>
+        <div class="cat-list" id="stCatList"></div>
+      </div>
+
+      <div class="card" id="cardDaily">
+        <div class="card-head"><span class="card-title">每日对比</span></div>
+        <div class="chart-box" id="chartDaily"></div>
+      </div>
+
+      <div class="card" id="cardMonthly">
+        <div class="card-head"><span class="card-title">月度对比</span></div>
+        <div class="chart-box" id="chartMonthly"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title">支出排行</span></div>
+        <div class="rank-list" id="rankList"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════ 设置 ══════════════════ -->
+  <section class="page" id="pageSettings">
+    <div class="set-top">设置</div>
+
+    <div class="body-scroll" id="bodySettings">
+
+      <div class="card" id="cardBooks">
+        <div class="card-head">
+          <span class="card-title">账本</span>
+          <span class="card-count">点账本改名 / 改备注 / 切换</span>
+        </div>
+        <div id="bookManageList"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">个人</span>
+        </div>
+        <div class="set-row" id="setAvatar">
+          <span class="set-ico">🙂</span>
+          <span class="set-name">头像</span>
+          <span class="set-val" id="setAvatarVal">默认 ›</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">主题外观</span>
+          <span class="card-count">点一下即可切换</span>
+        </div>
+        <div class="theme-grid" id="themeGrid"></div>
+        <div class="upload-row">
+          <button class="btn-line btn-upload" id="btnUploadTheme">＋ 上传自制主题图</button>
+          <button class="upload-arrow" id="btnThemeTip" aria-label="查看制作方法">▾</button>
+        </div>
+        <div class="tip" id="themeTip" hidden></div>
+      </div>
+
+      <div class="card">
+        <div class="set-row" id="setQuotes">
+          <span class="set-ico">💬</span>
+          <span class="set-name">激励池</span>
+          <span class="set-val" id="setQuotesVal">›</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title">数据</span></div>
+        <div class="set-row" id="setExport">
+          <span class="set-ico">📤</span><span class="set-name">导出备份</span>
+          <span class="set-val" id="setExportVal">存成 JSON 文件 ›</span>
+        </div>
+        <div class="set-row" id="setImport">
+          <span class="set-ico">📥</span><span class="set-name">导入恢复</span>
+          <span class="set-val">选备份文件恢复 ›</span>
+        </div>
+        <div class="set-row" id="setOpenFolder">
+          <span class="set-ico">📂</span><span class="set-name">打开备份文件夹</span>
+          <span class="set-val" id="setFolderVal">下载 / 记账本 ›</span>
+        </div>
+        <div class="set-row" id="setBackupText">
+          <span class="set-ico">📋</span><span class="set-name">备份文本</span>
+          <span class="set-val">复制 / 粘贴搬运 ›</span>
+        </div>
+        <div class="set-row is-danger" id="setClearDemo">
+          <span class="set-ico">🧹</span><span class="set-name">清空示例数据</span>
+          <span class="set-val">只删示例 ›</span>
+        </div>
+      </div>
+
+      <div class="about">
+        记一笔 · 本地记账<br>
+        所有数据只存在这台设备，不联网、不上传
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════ 底部 Tab ══════════════════ -->
+  <nav class="tabbar" id="tabbar">
+    <img class="deco deco-footer" id="decoFooter" alt="">
+    <button class="tab is-on" data-tab="home">
+      <span class="tab-ico">🏠</span><span class="tab-txt">首页</span>
+    </button>
+    <button class="tab" data-tab="stats">
+      <span class="tab-ico">📊</span><span class="tab-txt">统计</span>
+    </button>
+    <button class="tab" data-tab="settings">
+      <span class="tab-ico">⚙️</span><span class="tab-txt">设置</span>
+    </button>
+  </nav>
+
+
+<!-- ══════════════════ 二级页面：全部明细 ══════════════════
+     ★ 注意：下面这些浮层 / 二级页必须留在 #app 内部（#app 的 </div> 在文件靠后处）。
+       它们是 position:absolute + inset:0，包含块必须是 #app，
+       否则停靠用的 translateX(100%) 会把整个视口的滚动区撑宽，手机上能横向拖出空白。
+     ══════════════════ -->
+<div class="sub" id="subAll">
+  <div class="sub-head">
+    <button class="sub-back" data-back>‹</button>
+    <span class="sub-title">全部明细</span>
+    <span class="sub-count" id="allCount"></span>
+  </div>
+
+  <div class="filter-bar">
+    <input class="f-input" id="fKeyword" placeholder="搜事项 / 备注，比如「火锅」">
+    <div class="f-row" id="fTimeRow">
+      <div class="dd" id="fTimeDD">
+        <button class="dd-btn" id="fTimeBtn"><span id="fTimeLabel">全部时间</span><span class="dd-arrow">▾</span></button>
+        <div class="dd-list" id="fTimeList" hidden></div>
+      </div>
+      <div class="dd" id="fCatDD">
+        <button class="dd-btn" id="fCatBtn"><span id="fCatLabel">全部类目</span><span class="dd-arrow">▾</span></button>
+        <div class="dd-list" id="fCatList" hidden></div>
+      </div>
+      <button class="f-reset" id="fReset">重置</button>
+    </div>
+    <div class="f-row" id="fCustomRow" hidden>
+      <input class="f-date" type="date" id="fFrom">
+      <span class="f-tilde">~</span>
+      <input class="f-date" type="date" id="fTo">
+    </div>
+    <div class="f-row">
+      <button class="f-chip is-on" data-kind="all">全部</button>
+      <button class="f-chip" data-kind="expense">只看支出</button>
+      <button class="f-chip" data-kind="income">只看收入</button>
+    </div>
+  </div>
+
+  <div class="sub-body" id="allList"></div>
+  <div class="sub-sum" id="allSum"></div>
+</div>
+
+<!-- ══════════════════ 二级页面：类目明细（从统计页「支出构成」点进来） ══════════════════
+     页面结构和「全部明细」一样，但打开时自动带好筛选（如：9月 × 餐饮）。
+     它是独立的页面：返回时关掉它，露出的是统计页。 -->
+<div class="sub" id="subCat">
+  <div class="sub-head">
+    <button class="sub-back" data-back>‹</button>
+    <span class="sub-title" id="subCatTitle">明细</span>
+    <span class="sub-count" id="catPageCount"></span>
+  </div>
+
+  <div class="filter-bar">
+    <input class="f-input" id="cKeyword" placeholder="搜事项 / 备注">
+    <div class="f-row" id="cTimeRow">
+      <div class="dd" id="cTimeDD">
+        <button class="dd-btn" id="cTimeBtn"><span id="cTimeLabel">全部时间</span><span class="dd-arrow">▾</span></button>
+        <div class="dd-list" id="cTimeList" hidden></div>
+      </div>
+      <div class="dd" id="cCatDD">
+        <button class="dd-btn" id="cCatBtn"><span id="cCatLabel">全部类目</span><span class="dd-arrow">▾</span></button>
+        <div class="dd-list" id="cCatList" hidden></div>
+      </div>
+      <button class="f-reset" id="cReset">重置</button>
+    </div>
+    <div class="f-row" id="cCustomRow" hidden>
+      <input class="f-date" type="date" id="cFrom">
+      <span class="f-tilde">~</span>
+      <input class="f-date" type="date" id="cTo">
+    </div>
+    <div class="f-row">
+      <button class="f-chip" data-kind="all">全部</button>
+      <button class="f-chip" data-kind="expense">只看支出</button>
+      <button class="f-chip" data-kind="income">只看收入</button>
+    </div>
+  </div>
+
+  <div class="sub-body" id="catPageList"></div>
+  <div class="sub-sum" id="catPageSum"></div>
+</div>
+
+<!-- ══════════════════ 二级页面：激励池 ══════════════════ -->
+<div class="sub" id="subQuotes">
+  <div class="sub-head">
+    <button class="sub-back" data-back>‹</button>
+    <span class="sub-title">激励池</span>
+    <button class="sub-add" id="btnAddQuote">＋ 新增</button>
+  </div>
+  <div class="quote-note">
+    关掉的不会出现在首页。自己新增的会置顶，方便你找到。
+  </div>
+  <div class="sub-body" id="quoteList"></div>
+</div>
+
+
+<!-- ══════════════════ 记一笔 弹窗 ══════════════════ -->
+<div class="sheet-layer" id="sheetLayer">
+  <div class="sheet-mask" id="sheetMask"></div>
+  <div class="sheet" id="sheet">
+
+    <div class="sheet-head">
+      <div class="seg" id="typeSeg">
+        <button data-type="expense" class="is-on">支出</button>
+        <button data-type="income">收入</button>
+      </div>
+      <button class="sheet-x" id="btnClose" aria-label="关闭">✕</button>
+    </div>
+
+    <div class="sheet-body">
+      <!-- 一句话：事项 + 金额，自动拆 -->
+      <input class="entry-input" id="entryInput" placeholder="支出/收入 123">
+
+      <div class="entry-tools">
+        <button class="tool-btn" id="btnDate">📅 <span id="dateText">今天</span></button>
+        <button class="tool-btn" id="btnNote">＋ 备注</button>
+      </div>
+
+      <div class="note-row" id="noteRow">
+        <input class="note-input" id="noteInput" placeholder="备注（会显示在明细里）">
+      </div>
+
+      <!-- 识别结果：分类可点开手动改 -->
+      <div class="parse-row">
+        <button class="parse-chip" id="parseChip">
+          <span class="pc-ico">📦</span>
+          <span class="pc-name">其他</span>
+          <span class="pc-arrow">▾</span>
+        </button>
+        <span class="parse-amt" id="parseAmt">¥ --</span>
+      </div>
+
+      <div class="cat-pills" id="catPills"></div>
+    </div>
+
+    <div class="sheet-foot">
+      <button class="btn-del" id="btnDelete" hidden>删除</button>
+      <button class="btn-save" id="btnSave">保存</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════ 账本切换浮层（首页右上角进入） ══════════════════ -->
+<div class="pop-layer" id="bookPop">
+  <div class="pop-mask" data-pop-close></div>
+  <div class="pop">
+    <div class="pop-head">
+      <span>切换账本</span>
+      <button class="pop-x" data-pop-close>✕</button>
+    </div>
+    <div class="pop-body">
+      <div class="book-list" id="bookPopList"></div>
+      <button class="btn-line" id="btnNewBook">＋ 新建账本</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 新建账本浮层 ══════════════════ -->
+<div class="pop-layer" id="bookAddPop">
+  <div class="pop-mask" data-pop-close></div>
+  <div class="pop pop-sm">
+    <div class="pop-head">
+      <span>新建账本</span>
+      <button class="pop-x" data-pop-close>✕</button>
+    </div>
+    <div class="pop-body">
+      <input class="ask-input" id="newBookName" placeholder="账本名称，比如：日常开销 / 家庭统筹">
+      <div class="seg seg-book" id="newBookKind">
+        <button data-k="daily" class="is-on">日常账本</button>
+        <button data-k="pool">统筹账本</button>
+      </div>
+      <div class="kind-hint" id="kindHint">按月份记账：有预算、月度统计、每日对比</div>
+      <div class="icon-grid" id="newBookIcons"></div>
+      <input class="ask-input" id="newBookNote" placeholder="备注（可选，会显示在设置里）">
+      <button class="btn-line is-solid" id="newBookOk">创建</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 账本编辑浮层 ══════════════════ -->
+<div class="pop-layer pop-up" id="bookEditPop">
+  <div class="pop-mask" data-pop-close></div>
+  <div class="pop pop-sm">
+    <div class="pop-head">
+      <span id="bookEditTitle">账本</span>
+      <button class="pop-x" data-pop-close>✕</button>
+    </div>
+    <div class="pop-body">
+      <input class="ask-input" id="bookNameInput" placeholder="账本名称">
+      <div class="icon-grid" id="editBookIcons"></div>
+      <input class="ask-input" id="bookNoteInput" placeholder="备注（可选）">
+      <button class="btn-line is-solid" id="bookSaveBtn">保存</button>
+      <button class="btn-line" id="bookUseBtn" style="margin-top:8px">设为当前账本</button>
+      <button class="btn-line book-del" id="bookDelBtn" style="margin-top:8px" hidden>删除此账本</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 备份文本浮层（换设备/换版本时搬数据） ══════════════════ -->
+<div class="pop-layer" id="backupPop">
+  <div class="pop-mask" data-pop-close></div>
+  <div class="pop pop-sm">
+    <div class="pop-head">
+      <span>备份文本</span>
+      <button class="pop-x" data-pop-close>✕</button>
+    </div>
+    <div class="pop-body">
+      <div class="backup-tip">
+        换版本或换手机时用它搬数据，不用来回传文件：<br>
+        在旧的那份里点「复制当前全部数据」，发给自己；<br>
+        再到新的这份里粘进下面的框，点「从粘贴内容导入」。
+      </div>
+      <button class="btn-line" id="backupCopy">复制当前全部数据</button>
+      <textarea class="backup-ta" id="backupPaste" placeholder="把备份内容粘贴到这里…" spellcheck="false"></textarea>
+      <button class="btn-line is-solid" id="backupImport">从粘贴内容导入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ 输入浮层（起名字 / 加语录） ══════════════════ -->
+<div class="pop-layer" id="askPop">
+  <div class="pop-mask" data-pop-close></div>
+  <div class="pop pop-sm">
+    <div class="pop-head">
+      <span id="askTitle">主题名称</span>
+      <button class="pop-x" data-pop-close>✕</button>
+    </div>
+    <div class="pop-body">
+      <input class="ask-input" id="askInput" placeholder="写点什么">
+      <button class="btn-line is-solid" id="askOk">确定</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /#app: 二级页与浮层都在这里面 -->
+
+
+<div class="toast" id="toast"></div>
+
+<!-- 隐藏的输入控件 -->
+<input type="file" id="fileAvatar" accept="image/*" hidden>
+<input type="file" id="fileTheme" accept="image/png,image/jpeg,image/webp" hidden>
+<input type="file" id="fileImport" accept=".json,application/json" hidden>
+<input type="date" id="dateInput" hidden>
+<input type="month" id="budMonthInput" hidden>
+
+<script src="quotes.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
